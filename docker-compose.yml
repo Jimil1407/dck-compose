@@ -1,4 +1,5 @@
 version: '3.8'
+
 services:
   postgres:
     image: postgres
@@ -6,17 +7,20 @@ services:
       - 5432:5432
     environment:
       - POSTGRES_PASSWORD=mysecretpassword
+    healthcheck:
+      test: ["CMD", "pg_isready", "-U", "postgre  s"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   user_app:
-    build: 
-      network: host
+    build:
       context: ./
       dockerfile: Dockerfile
-
     environment:
-      - DATABASE_URL=postgresql://postgres:mysecretpassword@postgres:5432/postgres --network user-project -p 3000:3000
-
+      - DATABASE_URL=postgresql://postgres:mysecretpassword@postgres:5432/postgres
     ports:
       - 3000:3000
-    
     depends_on:
-      - postgres
+      postgres:
+        condition: service_healthy

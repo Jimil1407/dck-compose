@@ -2,18 +2,26 @@ FROM node:22-alpine
 
 WORKDIR /app
 
-COPY  ./package.json ./package.json
-COPY ./package-lock.json ./package-lock.json
+# Install pg_isready
+RUN apk add --no-cache postgresql-client
 
+# Copy and install dependencies
+COPY package*.json ./
 RUN npm install
+
+# Copy source code
 COPY . .
 
-#ENV DATABASE_URL=postgresql://postgres:mysecretpassword@localhost:5432/postgres
-#RUN DATABASE_URL=$DATABASE_URL npx prisma migrate dev
+# Generate Prisma client
 RUN npx prisma generate
+
+# Build TypeScript
 RUN npm run build
+
+# Copy entrypoint
+COPY entrypoint.sh /usr/local/bin/entrypoint.sh
+RUN chmod +x /usr/local/bin/entrypoint.sh
 
 EXPOSE 3000
 
-CMD ["npm","run","dev:docker"]
-
+ENTRYPOINT ["/usr/local/bin/entrypoint.sh"]
